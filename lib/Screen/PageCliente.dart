@@ -28,19 +28,35 @@ class PageCliente extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.all(10),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)
+                borderRadius: BorderRadius.circular(12),
               ),
               child: ListTile(
-                leading: CircleAvatar(
-                  child: Text(c.nombre),
-                ),
+                leading: CircleAvatar(child: Text(c.nombre)),
                 title: Text("${c.nombre} ${c.apellido}"),
                 subtitle: Text(c.email),
                 onTap: () => abrirFormulario(context, cliente: c),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => abrirFormulario(context, cliente: c),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => provider.deleteCliente(c.cedula),
+                    ),
+                  ],
+                ),
               ),
             );
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => abrirFormulario(context),
+        icon: const Icon(Icons.add),
+        label: const Text("Agregar Cliente"),
       ),
     );
   }
