@@ -10,7 +10,7 @@ class PageCliente extends StatelessWidget {
   void abrirFormulario(BuildContext context, {Cliente? cliente}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => clienteForm(cliente: cliente)),
+      MaterialPageRoute(builder: (_) => ClienteFrom(cliente: cliente)),
     );
   }
 
