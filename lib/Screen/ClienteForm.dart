@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:app_flutter/Entity/Cliente.dart';
 import 'package:app_flutter/Provider/ClienteProvider.dart';
 import 'package:app_flutter/Widget/CajaTextField.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:image_picker/image_picker.dart';
 
 class ClienteFrom extends StatefulWidget {
   final Cliente? cliente;
@@ -18,6 +23,9 @@ class _ClienteFromPageState extends State<ClienteFrom> {
   late TextEditingController _nombreController;
   late TextEditingController _apellidoController;
   late TextEditingController _emailController;
+  final ImagePicker _picker = ImagePicker();
+  String? _fotoPath;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +39,39 @@ class _ClienteFromPageState extends State<ClienteFrom> {
       text: widget.cliente?.apellido ?? "",
     );
     _emailController = TextEditingController(text: widget.cliente?.email ?? "");
+
+    _fotoPath = widget.cliente?.fotoPath;
+  }
+
+  Future<void> tomarFoto() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      if (image == null) return;
+      final directory = await getApplicationDocumentsDirectory();
+      final cedula = _cedulaController.text.trim().isEmpty
+          ? DateTime.now().microsecondsSinceEpoch.toString()
+          : _cedulaController.text.trim();
+
+      final nombreArchivo =
+          'cliente_${cedula}_${DateTime.now().microsecondsSinceEpoch}.jpg';
+      final nuevaRuta = p.join(directory.path, nombreArchivo);
+      final File imageGuardada = await File(image.path).copy(nuevaRuta);
+      if (!mounted) return;
+      setState(() {
+        _fotoPath = imageGuardada.path;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto guardada correctamente')),
+      );
+    } catch (e) {
+      if (mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Foto incorrecta')));
+    }
   }
 
   void guardarCliente() {
@@ -41,6 +82,7 @@ class _ClienteFromPageState extends State<ClienteFrom> {
       nombre: _nombreController.text,
       apellido: _apellidoController.text,
       email: _emailController.text,
+      fotoPath: _fotoPath,
     );
     if (widget.cliente == null) {
       provider.saveCliente(nuevoCliente);
@@ -48,6 +90,16 @@ class _ClienteFromPageState extends State<ClienteFrom> {
       provider.updateCliente(nuevoCliente);
     }
     Navigator.pop(context);
+  }
+
+  Widget _bluldFoto() {
+    if (_fotoPath != null && _fotoPath!.isNotEmpty) {
+      final archivo = File(_fotoPath!);
+      if (archivo.existsSync()) {
+        return CircleAvatar(radius: 55, backgroundImage: FileImage(archivo));
+      }
+    }
+    return CircleAvatar(radius: 55, child: Icon(Icons.person, size: 50));
   }
 
   @override
@@ -65,6 +117,13 @@ class _ClienteFromPageState extends State<ClienteFrom> {
           key: _formKey,
           child: Column(
             children: [
+              _bluldFoto(),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: tomarFoto,
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('Tomar foto'),
+              ),
               CajaTextField(
                 controller: _cedulaController,
                 label: "Cedula",

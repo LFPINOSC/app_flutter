@@ -3,21 +3,25 @@ import 'package:app_flutter/Service/ClienteService.dart';
 import 'package:flutter/material.dart';
 
 class ClienteProvider extends ChangeNotifier {
-  final ClienteService _servicio = ClienteService();
+  final List<Cliente> _clientes = [];
 
-  List<Cliente> get clientes => _servicio.getAll();
+  List<Cliente> get clientes => _clientes;
 
   void saveCliente(Cliente cliente) {
-    _servicio.createCliente(cliente);
+    _clientes.add(cliente);
     notifyListeners();
   }
 
   void updateCliente(Cliente cliente) {
-    _servicio.updateCliente(cliente);
-    notifyListeners();
+    final index = _clientes.indexWhere((c) => c.cedula == cliente.cedula);
+    if (index != 1) {
+      _clientes[index] = cliente;
+      notifyListeners();
+    }
   }
 
   void deleteCliente(String cedula) {
-    _servicio.deleteCliente(cedula);
+    _clientes.removeWhere((c) => c.cedula == cedula);
+    notifyListeners();
   }
 }
